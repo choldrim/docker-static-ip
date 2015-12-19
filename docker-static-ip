@@ -1,9 +1,9 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 if [ -z $1 ] || [ -z $2 ] || [ -z $3 ] || [ -z $4 ];
 then
         echo "E:Input parameters: CONTAINERID IP/MASK GATEWAY BRIDGE"
-        echo "Example: ./docker-ip \$container 10.0.255.1/16 10.0.0.1"
+        echo "Example: $0 \$container 10.0.255.1/16 10.0.0.1"
         exit 1
 fi
 
