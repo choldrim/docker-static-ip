@@ -3,7 +3,7 @@
 if [ -z $1 ] || [ -z $2 ] || [ -z $3 ] || [ -z $4 ];
 then
         echo "E:Input parameters: CONTAINERID IP/MASK GATEWAY BRIDGE"
-        echo "Example: $0 \$container 10.0.255.1/16 10.0.0.1"
+        echo "Example: $0 \$container 10.0.255.1/16 10.0.0.1 br0"
         exit 1
 fi
 
@@ -12,20 +12,21 @@ NETWORK=$2
 GATEWAY=$3
 BRIDGE=$4
 
-vethA="veth-A-$(random_str)"
+vethA="veth-A-$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 6 | head -n 1)"
+vethB="veth-B-$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 6 | head -n 1)"
 
 pid=`docker inspect -f '{{.State.Pid}}' $CONTAINERID`
 mkdir -p /var/run/netns
 ln -sf /proc/$pid/ns/net /var/run/netns/$pid
 
 # add veth peer
-ip link add $vethA type veth peer name vethB
+ip link add $vethA type veth peer name $vethB
 brctl addif $BRIDGE $vethA
 ip link set $vethA up
-ip link set vethB netns $pid
+ip link set $vethB netns $pid
 
 # set eth ip belonged to container
-ip netns exec $pid ip link set dev vethB name eth0
+ip netns exec $pid ip link set dev $vethB name eth0
 ip netns exec $pid ip link set eth0 up
 ip netns exec $pid ip addr add $NETWORK dev eth0
 
